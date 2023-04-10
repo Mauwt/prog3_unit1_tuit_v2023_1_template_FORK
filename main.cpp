@@ -1,6 +1,11 @@
 #include <iostream>
+#include "tuit.h"
 
 int main() {
-    std::cout << "Hola Mundo" << std::endl;
-    return 0;
+
+    Tuit tuit;
+    tuit.load("file1.txt");
+    std::cout << tuit;
+    std::cin.get();
+
 }

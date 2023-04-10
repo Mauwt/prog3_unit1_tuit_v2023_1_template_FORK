@@ -19,6 +19,9 @@ public:
     Element() = default;
     explicit Element(int _id): id(_id){};
 
+    //Destructor
+    virtual ~Element(){};
+
     //Methods
     virtual void show(std::ostream& os) = 0;
 };
@@ -27,12 +30,12 @@ class Tuit{
 private:
     std::string user_name;
     std::string text;
-    std::vector<Element*> elements;
+    std::vector<Element*> elements; //Polimorfismo: coleccoines polimorficas -> media, emoji, poll
     std::vector<Tuit> replies;
 public:
     //Constructors
     Tuit()=default;
-    Tuit(std::string _user_name, std::string _text): text(_text), user_name(std::move(_user_name)){};
+    Tuit(std::string _user_name, std::string _text): text(_text), user_name(_user_name){};
 
     //Methods
     Tuit& add_element(Element* e);
@@ -43,8 +46,7 @@ public:
     void load(std::string file_name);
 
     friend std::ostream& operator<<(std::ostream& out, Tuit& tuit);
-    friend std::istream& operator>>(std::istream& in, Tuit& tuit);
-    friend std::ifstream in(std::string filename);
+    friend std::ifstream& operator>>(std::ifstream& in, Tuit& tuit);
 
 };
 
@@ -54,7 +56,7 @@ private:
     std::string file_name;
 public:
     Media()=default;
-    Media(int _id, std::string filename) : Element(_id), file_name(filename){};
+    Media(int _id, std::string _filename) : Element(_id), file_name(_filename){};
 
     //Methods
     void  show(std::ostream& os) override;
@@ -85,7 +87,8 @@ private:
 public:
     //Constructor
     Poll() = default;
-    Poll(int _id, std::string _title, std::vector<std::string> _choices, int _days, int hours, int minutes);
+    Poll(int _id, std::string _title, std::vector<std::string> _choices, int _days, int _hours, int _minutes) : Element(_id),
+            title(_title),choices(_choices),days(_days), hours(_hours), minutes(_minutes){};
 
 
     //methods
