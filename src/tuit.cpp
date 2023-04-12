@@ -7,15 +7,51 @@
 #include <fstream>
 using namespace std;
 
+//Utils
+std::string trim(std::string &&str){
+    int first_char = 0, last_char=str.length()-1;
 
-void question_1(){}
+    for (int i = 0; i < str.length();  i++){
+        if(str[i] != ' '){
+            first_char = i;
+            break;
+        }
+    }
+
+    for (int i = str.length()-1; i>0; i--){
+        if(str[i] != ' '){
+            last_char = i;
+            break;
+        }
+    }
+
+    str = str.substr(first_char, last_char-first_char+1);
+    return str;
+}
+void trim(std::string &str){
+    int first_char = 0, last_char=str.length()-1;
+
+    for (int i = 0; i < str.length();  i++){
+        if(str[i] != ' '){
+            first_char = i;
+            break;
+        }
+    }
+
+    for (int i = str.length()-1; i>0; i--){
+        if(str[i] != ' '){
+            last_char = i;
+            break;
+        }
+    }
+
+    str = str.substr(first_char, last_char-first_char+1);
+}
 
 //Clase Media
 void Media::show(ostream &os) {
     os<<this->file_name<<'\n';
 }
-
-
 
 //Clase Emoji
 void Emoji::show(ostream &os) {
@@ -31,7 +67,32 @@ void Poll::show(ostream &os) {
 }
 
 
+
 //Clase Tuit
+/*Tuit::Tuit(const Tuit &other) {
+
+    text = other.text;
+    user_name = other.user_name;
+    for(int elem =0; elem < other.elements.size(); elem++) elements.push_back(other.elements[elem]); // Copiar elementos
+    for(int tuits =0; tuits<other.replies.size(); tuits++) replies.push_back(other.replies[tuits]); // Copiar replies
+}*/
+/*
+Tuit::Tuit(Tuit&& other) noexcept{
+    text = other.text;
+    other.text.clear();
+    user_name = other.user_name;
+    other.user_name.clear();
+    for(int elem =0; elem < other.elements.size(); elem++) {
+        elements.push_back(other.elements[elem]); // Copiar elementos
+        other.elements[elem] = nullptr;
+    }
+    other.elements.clear();
+    for(int tuits =0; tuits<other.replies.size(); tuits++) {
+        replies.push_back(other.replies[tuits]); // Copiar replies
+    }
+    other.replies.clear();
+}*/
+
 
 Tuit &Tuit::add_element(Element *e) {
     elements.push_back(e);
@@ -43,7 +104,7 @@ Tuit &Tuit::add_reply(Tuit r) {
     return *this;
 }
 
-void Tuit::show(ostream &os) {
+Tuit& Tuit::show(ostream &os) {
     os<<"====================\n";
     os<<"@"<<user_name<<'\n';
     os<<text<<'\n';
@@ -51,6 +112,10 @@ void Tuit::show(ostream &os) {
     for(auto element:elements){
         element->show(cout);
     }
+    for(auto reply:replies){
+        reply.show(cout);
+    }
+    return *this;
 }
 
 void Tuit::save_to(std::string file_name) {
@@ -59,11 +124,12 @@ void Tuit::save_to(std::string file_name) {
 
 void Tuit::load(std::string file_name) {
 
-    //std::string path = file_name;
+
+    std::string path =".\\" + file_name;
     std::ifstream tuitFile;
 
-    tuitFile.open("C:\\Dev\\progra3\\semana2\\prog3_unit1_tuit_v2023_1_template_FORK\\file1.txt");
 
+    tuitFile.open(path);
     
     if (!tuitFile.is_open()) {
         cout << "No se pudo abrir el archivo." << endl;
@@ -85,14 +151,14 @@ void Tuit::load(std::string file_name) {
         while(idx<line.length()){
             if (line[idx]!='|')idx++;
             else {
-
-                temp.push_back(line.substr(pos, idx-pos));
+                std::string str =trim(line.substr(pos, idx-pos));
+                temp.push_back(str);
                 idx++;
                 pos = idx;
 
             }
         }
-        temp.push_back(line.substr(pos));
+        temp.push_back(trim(line.substr(pos)));
         thr.push_back(temp);
 
         if (temp[0] == "Tuit") replies_idx.push_back(temp_count);
@@ -125,7 +191,7 @@ void Tuit::load(std::string file_name) {
             while(idx < thr[elm][3].length()){
                 if (thr[elm][3][idx] != ',') idx++;
                 else{
-                    opciones.push_back(thr[elm][3].substr(pos, idx - pos));
+                    opciones.push_back(trim(thr[elm][3].substr(pos, idx - pos)));
                     idx++;
                     pos = idx;
                 }
@@ -167,7 +233,7 @@ void Tuit::load(std::string file_name) {
                 while(idx < thr[j][3].length()){
                     if (thr[j][3][idx] != ',') idx++;
                     else{
-                        opciones.push_back(thr[j][3].substr(pos, idx - pos));
+                        opciones.push_back(trim(thr[j][3].substr(pos, idx - pos)));
                         idx++;
                         pos = idx;
                     }
@@ -186,16 +252,156 @@ void Tuit::load(std::string file_name) {
 }
 
 
-
 //Sobrecarga de operadores con funciones amigas
 std::ostream& operator<<(std::ostream& out, Tuit& tuit){
-    tuit.show(out);
+    /*tuit.show(out);
 
-    for(auto reply:tuit.replies){
-        reply.show(out);
-    }
+    for(int i = 0; i<tuit.replies.size(); i++){
+        tuit.replies[i].show(out);
+    }*/
+    tuit.show(std::cout);
     return out;
 }
 
+void operator>>(std::ifstream& in, Tuit& tuit){
+
+    std::string line;
+    std::vector<std::vector<string>> main_tuit;
+    std::vector<std::vector<string>> replies_thread;
+    std::vector<int> replies_idx;
+
+
+    while(getline(in, line)){
+        std::string dato;
+        std::vector<std::string> line_data;
+        std::istringstream iss(line);
+
+        bool is_main_tuit;
+        if(line.substr(0,4) == "Tuit"){
+            main_tuit.empty() ? is_main_tuit = true : is_main_tuit= false;
+        }
+
+        while(getline(iss, dato, '|')){
+            trim(dato);
+            line_data.push_back(dato);
+        }
+
+        if(is_main_tuit){
+            main_tuit.push_back(line_data);
+        }else{
+            replies_thread.push_back(line_data);
+        }
+    }
+
+    // Añadir todos los atributos y elementos del Tuit principal
+    tuit.user_name = main_tuit[0][1];
+    tuit.text = main_tuit[0][2];
+    for(auto elem:main_tuit){
+        if (elem[0] == "Tuit")continue;
+
+        if(elem[0] == "Emoji"){
+            Element* emoji;
+
+            emoji = new Emoji(
+                    stoi(elem[1]),
+                    elem[2],
+                    stoi(elem[3])
+                    );
+            tuit.add_element(emoji);
+        }
+        else if (elem[0]=="Media"){
+            Element* media;
+            media = new Media(
+                    stoi(elem[1]),
+                    elem[2]
+                    );
+            tuit.add_element(media);
+        }
+        else if(elem[0]=="Poll"){
+            Element* poll;
+
+            std::string opcion;
+            std::vector<string> opciones;
+
+            istringstream iss(elem[3]);
+            while(getline(iss, opcion, ',')){
+                trim(opcion);
+                opciones.push_back(opcion);
+            }
+
+
+            poll = new Poll(
+                    stoi(elem[1]),
+                    elem[2],
+                    opciones,
+                    stoi(elem[4]),
+                    stoi(elem[5]),
+                    stoi(elem[6])
+                    );
+            tuit.add_element(poll);
+        }
+
+    }
+
+    std::vector<Tuit> reply_tuits;
+
+    for(auto reply_line:replies_thread){
+
+        if(reply_line[0] == "Tuit"){
+            Tuit reply(reply_line[1], reply_line[2]);
+            reply_tuits.push_back(reply);
+        }
+
+        else if(reply_line[0]== "Emoji"){
+            Element* emoji;
+
+            emoji = new Emoji(
+                    stoi(reply_line[1]),
+                    reply_line[2],
+                    stoi(reply_line[3])
+            );
+
+            reply_tuits[reply_tuits.size()-1].add_element(emoji);
+        }
+
+        else if (reply_line[0]=="Media"){
+            Element* media;
+            media = new Media(
+                    stoi(reply_line[1]),
+                    reply_line[2]
+            );
+            reply_tuits[reply_tuits.size()-1].add_element(media);
+        }
+        else if(reply_line[0]=="Poll"){
+            Element* poll;
+
+            std::string opcion;
+            std::vector<string> opciones;
+
+            istringstream iss(reply_line[3]);
+            while(getline(iss, opcion, ',')){
+                trim(opcion);
+                opciones.push_back(opcion);
+            }
+
+
+            poll = new Poll(
+                    stoi(reply_line[1]),
+                    reply_line[2],
+                    opciones,
+                    stoi(reply_line[4]),
+                    stoi(reply_line[5]),
+                    stoi(reply_line[6])
+            );
+            reply_tuits[reply_tuits.size()-1].add_element(poll);
+        }
+
+    }
+
+    for(auto replies: reply_tuits){
+        tuit.add_reply(replies);
+    }
+
+}
 
 
