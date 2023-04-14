@@ -68,32 +68,6 @@ void Poll::show(ostream &os) {
 
 
 
-//Clase Tuit
-/*Tuit::Tuit(const Tuit &other) {
-
-    text = other.text;
-    user_name = other.user_name;
-    for(int elem =0; elem < other.elements.size(); elem++) elements.push_back(other.elements[elem]); // Copiar elementos
-    for(int tuits =0; tuits<other.replies.size(); tuits++) replies.push_back(other.replies[tuits]); // Copiar replies
-}*/
-/*
-Tuit::Tuit(Tuit&& other) noexcept{
-    text = other.text;
-    other.text.clear();
-    user_name = other.user_name;
-    other.user_name.clear();
-    for(int elem =0; elem < other.elements.size(); elem++) {
-        elements.push_back(other.elements[elem]); // Copiar elementos
-        other.elements[elem] = nullptr;
-    }
-    other.elements.clear();
-    for(int tuits =0; tuits<other.replies.size(); tuits++) {
-        replies.push_back(other.replies[tuits]); // Copiar replies
-    }
-    other.replies.clear();
-}*/
-
-
 Tuit &Tuit::add_element(Element *e) {
     elements.push_back(e);
     return *this;
@@ -128,7 +102,6 @@ void Tuit::load(std::string file_name) {
     std::string path =".\\" + file_name;
     std::ifstream tuitFile;
 
-
     tuitFile.open(path);
     
     if (!tuitFile.is_open()) {
@@ -137,12 +110,12 @@ void Tuit::load(std::string file_name) {
     }
 
     std::string line;
-
     std::vector< std::vector<std::string> > thr;
 
     int temp_count = 0;
     std::vector<int> replies_idx;
 
+    //Obteniendo los datos de las lineas del archivo
     while(getline(tuitFile, line)){
 
         int idx = 0, pos = 0;
@@ -165,6 +138,17 @@ void Tuit::load(std::string file_name) {
         temp_count++;
     }
 
+    //Limpiando memoria del vector elements
+    for (int elem = 0; elem < elements.size(); elem++){
+        delete elements[elem];
+    }
+    elements.clear();
+
+    //Limpiando los elementos de los tuits en reply
+    for(int reply = 0; reply < replies.size(); reply++){
+        delete replies[reply].elements[reply];
+    }
+    replies.clear();
 
     this->user_name = thr[0][1];
     this->text = thr[0][2];
@@ -204,6 +188,7 @@ void Tuit::load(std::string file_name) {
         }
     }
 
+    //Bucle para añadir los Replies y sus elementos
     for (int i = 1; i<replies_idx.size(); i++) {
         Tuit reply(thr[replies_idx[i]][1] , thr[replies_idx[i]][2]);
 
@@ -270,7 +255,7 @@ void operator>>(std::ifstream& in, Tuit& tuit){
     std::vector<std::vector<string>> replies_thread;
     std::vector<int> replies_idx;
 
-
+    //Obteniendo la información de las lineas del archivo
     while(getline(in, line)){
         std::string dato;
         std::vector<std::string> line_data;
@@ -292,6 +277,19 @@ void operator>>(std::ifstream& in, Tuit& tuit){
             replies_thread.push_back(line_data);
         }
     }
+
+    //Limpiando memoria del vector elements
+    for (int elem = 0; elem < tuit.elements.size(); elem++){
+        delete tuit.elements[elem];
+    }
+    tuit.elements.clear();
+
+    //Limpiando los elementos de los tuits en reply
+    for(int reply = 0; reply < tuit.replies.size(); reply++){
+        delete tuit.replies[reply].elements[reply];
+    }
+    tuit.replies.clear();
+
 
     // Añadir todos los atributos y elementos del Tuit principal
     tuit.user_name = main_tuit[0][1];
